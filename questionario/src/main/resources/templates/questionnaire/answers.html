@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title th:text="'Respostas do Questionário: ' + ${questionnaire.name}"></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-10 px-6 flex flex-col items-center">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-5xl border border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-800 mb-8 text-center tracking-tight"
+        th:text="'Respostas - ' + ${questionnaire.name}">
+      Respostas do Questionário
+    </h1>
+
+    <!-- Caso não haja perguntas -->
+    <div th:if="${#lists.isEmpty(questions)}" class="text-center text-gray-600 py-8">
+      <p class="italic">Este questionário não possui perguntas cadastradas.</p>
+    </div>
+
+    <!-- Loop das questões -->
+    <div th:each="q : ${questions}" class="mb-10">
+      <h2 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4"
+          th:text="${q.text}">
+        Texto da questão
+      </h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-700 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <thead class="bg-gray-100 text-gray-800 uppercase text-xs">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Aluno</th>
+              <th class="px-4 py-3 font-semibold">Resposta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- answersByQuestion é um Map<Long, List<Answer>> vindo do controller -->
+            <tr th:each="a : ${answersByQuestion[q.id]}"
+                class="border-t border-gray-100 hover:bg-gray-50 transition duration-150">
+              <!-- AQUI AJUSTAMOS PARA userUsername -->
+              <td class="px-4 py-3" th:text="${a.userUsername}">login do aluno</td>
+              <td class="px-4 py-3" th:text="${a.response}">Texto da resposta</td>
+            </tr>
+
+            <!-- Quando não há respostas para a questão -->
+            <tr th:if="${#lists.isEmpty(answersByQuestion[q.id])}">
+              <td colspan="2" class="px-4 py-3 italic text-gray-500 text-center">
+                Nenhuma resposta registrada para esta questão.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Link de retorno -->
+    <div class="text-center mt-10">
+      <a href="/questionnaires"
+         class="inline-block text-blue-600 hover:text-blue-800 font-medium transition duration-150">
+        ← Voltar para a lista de questionários
+      </a>
+    </div>
+  </div>
+</body>
+</html>

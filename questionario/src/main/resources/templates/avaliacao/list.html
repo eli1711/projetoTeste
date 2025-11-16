@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avaliações Aplicadas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex flex-col font-sans">
+<header class="bg-sky-700 text-white shadow">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <a href="/home" class="font-semibold tracking-tight text-lg">CPA - Avaliações</a>
+    <nav class="flex items-center gap-4 text-sm">
+      <a href="/home" class="hover:text-sky-200">Início</a>
+      <a href="/avaliacoes" class="hover:text-sky-200">Avaliações</a>
+      <a href="/questionnaires" class="hover:text-sky-200">Questionários</a>
+      <a href="/users" class="hover:text-sky-200">Usuários</a>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button type="submit"
+                class="ml-3 px-3 py-1 rounded-lg bg-sky-900 hover:bg-sky-800 text-xs font-medium">
+          Sair
+        </button>
+      </form>
+    </nav>
+  </div>
+</header>
+
+<main class="flex-1">
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="bg-white rounded-2xl shadow border border-slate-200 mt-4 mb-8 px-4 md:px-8 py-8">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">Avaliações Aplicadas</h1>
+          <p class="text-sm text-slate-500 mt-1">
+            Gerencie quais questionários foram aplicados em cada turma, com período de resposta e status.
+          </p>
+        </div>
+
+        <a href="/avaliacoes/new"
+           class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-emerald-700 transition text-sm">
+          ➕ Nova Avaliação
+        </a>
+      </div>
+
+      <!-- MENSAGEM DE SUCESSO -->
+      <div th:if="${success}"
+           class="mb-4 bg-emerald-50 border border-emerald-400 text-emerald-800 px-4 py-3 rounded text-sm">
+        <p th:text="${success}"></p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+          <thead class="bg-slate-100 text-slate-800 uppercase text-xs font-semibold">
+            <tr>
+              <th class="px-4 py-3 text-left">Questionário</th>
+              <th class="px-4 py-3 text-left">Turma</th>
+              <th class="px-4 py-3 text-left">Período</th>
+              <th class="px-4 py-3 text-left">Status</th>
+              <th class="px-4 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- LINHAS DE AVALIAÇÃO -->
+            <tr th:each="a : ${avaliacoes}" class="border-t border-slate-100 hover:bg-slate-50 transition">
+              <td class="px-4 py-3 text-sm text-slate-700" th:text="${a.questionario.name}">
+                Questionário CPA
+              </td>
+
+              <td class="px-4 py-3 text-sm text-slate-700"
+                  th:text="${a.turma != null} ? a.turma.nome : '—'">
+                ADS 2º Sem 2025
+              </td>
+
+              <td class="px-4 py-3 text-sm text-slate-700">
+                <span th:text="${#temporals.format(a.dataInicio, 'dd/MM/yyyy HH:mm')}">
+                  01/01/2025 08:00
+                </span>
+                &nbsp;até&nbsp;
+                <span th:text="${#temporals.format(a.dataFim, 'dd/MM/yyyy HH:mm')}">
+                  10/01/2025 23:59
+                </span>
+              </td>
+
+              <!-- STATUS SEM TERNÁRIA ANINHADA -->
+              <td class="px-4 py-3 text-sm">
+                <!-- Sem status -->
+                <span th:if="${a.status == null}"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                             bg-slate-100 text-slate-500">
+                  Sem status
+                </span>
+
+                <!-- ABERTA -->
+                <span th:if="${a.status != null and a.status.name() == 'ABERTA'}"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                             bg-emerald-50 text-emerald-700"
+                      th:text="${a.status}">
+                  ABERTA
+                </span>
+
+                <!-- ENCERRADA -->
+                <span th:if="${a.status != null and a.status.name() == 'ENCERRADA'}"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                             bg-slate-200 text-slate-700"
+                      th:text="${a.status}">
+                  ENCERRADA
+                </span>
+
+                <!-- QUALQUER OUTRO STATUS -->
+                <span th:if="${a.status != null and a.status.name() != 'ABERTA' and a.status.name() != 'ENCERRADA'}"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold
+                             bg-slate-100 text-slate-600"
+                      th:text="${a.status}">
+                  OUTRO
+                </span>
+              </td>
+
+              <!-- AÇÕES -->
+              <td class="px-4 py-3 text-sm text-right">
+                <a th:href="@{/avaliacoes/{id}/respostas(id=${a.id})}"
+                   class="inline-block bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-sky-700 transition">
+                  Ver respostas
+                </a>
+              </td>
+            </tr>
+
+            <!-- QUANDO NÃO HÁ AVALIAÇÕES -->
+            <tr th:if="${#lists.isEmpty(avaliacoes)}">
+              <td colspan="5" class="text-center text-slate-500 italic py-6 text-sm">
+                Nenhuma avaliação aplicada cadastrada.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-center mt-8">
+        <a href="/home"
+           class="inline-block text-sky-700 hover:text-sky-900 font-medium text-sm">
+          ← Voltar ao painel
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="border-t border-slate-200 bg-white">
+  <div class="max-w-6xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
+    © 2025 Sistema de Avaliação CPA
+  </div>
+</footer>
+</body>
+</html>

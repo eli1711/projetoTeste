@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="'Visualizar Questionário: ' + ${questionnaire.name}">Visualizar Questionário</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center py-10 px-6">
+  <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-3xl border border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center tracking-tight"
+        th:text="${questionnaire.name}">
+      Questionário
+    </h1>
+
+    <!-- Dados do questionário -->
+    <div class="text-gray-700 space-y-1 mb-6 text-center">
+      <p><strong>Semestre:</strong> <span th:text="${questionnaire.semester}">1</span></p>
+      <p><strong>Ano:</strong> <span th:text="${questionnaire.year}">2025</span></p>
+      <p>
+        <strong>Status:</strong>
+        <span th:text="${questionnaire.status}"
+              th:classappend="${questionnaire.status?.toString() == 'DISPONIVEL'} ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+          DISPONÍVEL
+        </span>
+      </p>
+    </div>
+
+    <hr class="my-6"/>
+
+    <!-- Perguntas -->
+    <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">Perguntas</h2>
+
+    <div th:if="${#lists.isEmpty(questions)}" class="text-center text-gray-500 italic py-4">
+      Nenhuma questão cadastrada.
+    </div>
+
+    <ul th:each="q : ${questions}" class="space-y-4">
+      <li class="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition duration-150">
+        <div>
+          <p class="font-semibold text-gray-800 mb-1" th:text="${q.text}">Texto da questão</p>
+          <small class="text-gray-600">
+            Tipo: <span th:text="${q.type}">QUALITATIVA</span>
+            <span th:if="${q.type?.toString() eq 'QUANTITATIVA'}">
+              — <em>Pontuação:</em> <span th:text="${q.score}">5</span>
+            </span>
+          </small>
+        </div>
+      </li>
+    </ul>
+
+    <hr class="my-6"/>
+
+    <!-- Ações -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <!-- EXISTE: GET /questionnaires/{id}/answers -->
+      <a th:href="@{/questionnaires/{id}/answers(id=${questionnaire.id})}"
+         class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-blue-700 transition duration-200">
+        📊 Ver Respostas
+      </a>
+
+      <!-- EXISTE: GET /questionnaires/{id}/questions/new -->
+      <a th:href="@{/questionnaires/{id}/questions/new(id=${questionnaire.id})}"
+         class="bg-green-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-green-700 transition duration-200">
+        ➕ Cadastrar Nova Questão
+      </a>
+    </div>
+
+    <!-- Voltar -->
+    <div class="text-center mt-8">
+      <a href="/questionnaires"
+         class="inline-block text-blue-600 hover:text-blue-800 font-medium transition duration-150">
+        ← Voltar para a lista de questionários
+      </a>
+    </div>
+  </div>
+</body>
+</html>

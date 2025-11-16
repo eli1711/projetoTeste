@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Erro de Acesso - 403</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex items-center justify-center font-sans">
+  <div class="bg-white border border-slate-200 shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+    <div class="mb-4">
+      <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-50 text-red-600 text-xl font-bold">
+        !
+      </span>
+    </div>
+    <h1 class="text-3xl font-bold text-red-600 mb-2 tracking-tight">403</h1>
+    <h2 class="text-lg font-semibold text-slate-800 mb-3">Acesso negado</h2>
+    <p class="text-slate-600 text-sm mb-6">
+      Você não tem permissão para acessar este recurso com o perfil atual.
+      Verifique se está usando a conta correta ou entre em contato com a coordenação
+      para revisar seu nível de acesso.
+    </p>
+    <div class="flex flex-col gap-3">
+      <a href="/home"
+         class="bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow
+                hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
+        Ir para o painel
+      </a>
+      <a href="/login"
+         class="text-sky-700 hover:text-sky-900 text-sm font-medium">
+        Fazer login com outra conta
+      </a>
+    </div>
+  </div>
+</body>
+</html>

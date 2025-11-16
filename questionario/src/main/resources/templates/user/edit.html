@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title th:text="${cadastroAluno} ? 'Cadastro de Aluno' : 'Cadastro de Usuário'">
+    Cadastro
+  </title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center py-10 px-6">
+  <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-3xl border border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center tracking-tight"
+        th:text="${cadastroAluno} ? 'Cadastro de Aluno' : 'Cadastro de Usuário'">
+      Cadastro
+    </h1>
+
+    <!-- Mensagens flash -->
+    <div th:if="${error}" class="mb-4 text-center text-red-600 text-sm font-medium" th:text="${error}"></div>
+    <div th:if="${success}" class="mb-4 text-center text-green-600 text-sm font-medium" th:text="${success}"></div>
+
+    <form th:action="${cadastroAluno} ? @{/users/aluno/registrar} : @{/users/save}"
+          th:object="${user}"
+          method="post"
+          class="space-y-6">
+
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+        <input type="text" id="name" th:field="*{name}" required
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+        <input type="email" id="email" th:field="*{email}" required
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <!-- LOGIN -->
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+          Login de acesso
+        </label>
+        <input type="text"
+               id="username"
+               th:field="*{username}"
+               required
+               placeholder="ex: joao.silva"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <p class="mt-1 text-xs text-gray-500">
+          Este será o login usado para acessar o sistema.
+        </p>
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <input type="password" id="password" th:field="*{password}"
+               th:placeholder="${user.username != null and !cadastroAluno} ? 'Deixe em branco para manter' : ''"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <div>
+        <label for="ra" class="block text-sm font-medium text-gray-700 mb-1">RA / Matrícula</label>
+        <input type="text" id="ra" th:field="*{ra}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+      </div>
+
+      <!-- Turma -->
+      <div>
+        <label for="turmaId" class="block text-sm font-medium text-gray-700 mb-1">Turma</label>
+        <select id="turmaId" name="turmaId"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">(Sem turma)</option>
+          <option th:each="t : ${turmas}"
+                  th:value="${t.id}"
+                  th:text="${t.nome + ' - ' + t.curso + ' (' + t.ano + '/' + t.semestre + ')'}"
+                  th:selected="${user.turma != null and user.turma.id == t.id}">
+          </option>
+        </select>
+      </div>
+
+      <!-- Função – auto cadastro de aluno -->
+      <div th:if="${cadastroAluno}">
+        <input type="hidden" th:field="*{role}" />
+        <p class="text-sm text-gray-600 mt-1">
+          Sua função será: <span class="font-semibold">ALUNO</span>.
+        </p>
+      </div>
+
+      <!-- Função – uso interno (admin) -->
+      <div th:unless="${cadastroAluno}">
+        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Função</label>
+        <select id="role" th:field="*{role}" required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">Selecione...</option>
+          <option value="ROLE_ALUNO">Aluno</option>
+          <option value="ROLE_PROFESSOR">Professor</option>
+          <option value="ROLE_ADMIN">Administrador</option>
+        </select>
+      </div>
+
+      <div class="pt-4 flex justify-center gap-3">
+        <a th:href="${cadastroAluno} ? @{/login} : @{/users}"
+           class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100">
+          Cancelar
+        </a>
+        <button type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-blue-700 text-sm">
+          <span th:text="${cadastroAluno} ? 'Criar cadastro' : 'Salvar Usuário'">Salvar Usuário</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
