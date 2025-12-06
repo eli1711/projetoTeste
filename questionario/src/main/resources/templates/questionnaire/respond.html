@@ -1,94 +1,199 @@
 <!DOCTYPE html>
-<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title th:text="'Responder: ' + ${questionnaire.name}">Responder Questionário</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-slate-100 min-h-screen flex flex-col">
-<header class="bg-sky-700 text-white shadow">
-  <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-    <a href="/home" class="font-semibold tracking-tight text-lg">CPA - Aluno</a>
-    <nav class="flex items-center gap-4 text-sm">
-      <a href="/questionnaires/available" class="hover:text-sky-200">Questionários</a>
+<body class="bg-gradient-to-br from-slate-100 to-red-100 min-h-screen flex flex-col font-sans">
+
+<!-- Cabeçalho vermelho com foco no aluno -->
+<header class="bg-red-700 text-white shadow">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+
+    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-red-800 text-xs font-bold">
+        CPA
+      </span>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm uppercase tracking-[0.2em] text-red-100">Sistema CPA</span>
+        <span class="text-base">Painel do Aluno</span>
+      </div>
+    </a>
+
+    <!-- MENU ALUNO -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <a href="/home" class="hover:text-red-100 transition">Início</a>
+      <a href="/avaliacoes/disponiveis" class="hover:text-red-100 transition">
+        Minhas Avaliações
+      </a>
       <form th:action="@{/logout}" method="post" class="inline">
         <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
         <button type="submit"
-                class="ml-3 px-3 py-1 rounded-lg bg-sky-900 hover:bg-sky-800 text-xs font-medium">
+                class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
           Sair
         </button>
       </form>
     </nav>
+
+    <!-- MENU ADMIN / GESTOR (caso acesse) -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_GESTOR')">
+      <a href="/avaliacoes" class="hover:text-red-100 transition">Avaliações</a>
+      <a href="/questionnaires" class="hover:text-red-100 font-semibold underline underline-offset-4 transition">
+        Questionários
+      </a>
+      <a href="/users" class="hover:text-red-100 transition">Usuários</a>
+      <a href="/turmas" class="hover:text-red-100 transition">Turmas</a>
+      <a href="/analise/avaliacoes" class="hover:text-red-100 transition">Análises</a>
+      <a href="/alunos" class="hover:text-red-100 transition">Alunos</a>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button type="submit"
+                class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </nav>
+
+    <!-- Versão mobile -->
+    <div class="flex md:hidden items-center gap-2">
+      <a href="/home"
+         class="text-xs px-3 py-1.5 rounded-full bg-red-800 hover:bg-red-900 transition">
+        Painel
+      </a>
+      <form th:action="@{/logout}" method="post" class="inline" sec:authorize="isAuthenticated()">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </div>
+
   </div>
 </header>
 
 <main class="flex-1">
-  <div class="max-w-4xl mx-auto px-4 py-10 bg-white rounded-2xl shadow border border-slate-200 mt-8 mb-8">
-    <h1 class="text-2xl font-bold text-sky-700 mb-8 text-center tracking-tight"
-        th:text="'Responder Questionário: ' + ${questionnaire.name}">
-      Responder Questionário
-    </h1>
-
-    <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 text-center">
-      <p th:text="${error}"></p>
-    </div>
-
-    <div th:if="${success}" class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded-lg mb-6 text-center">
-      <p th:text="${success}"></p>
-    </div>
-
-    <form th:action="@{/questionnaires/{id}/respond(id=${questionnaire.id})}"
-          method="post" class="space-y-8">
-      <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
-
-      <div th:each="q : ${questions}" class="bg-slate-50 p-5 border border-slate-200 rounded-xl shadow-sm">
-        <p class="font-semibold text-slate-800 mb-3" th:text="${q.text}">Texto da questão</p>
-
-        <div th:if="${q.type?.toString() == 'QUALITATIVA'}">
-          <label th:for="'resp_' + ${q.id}" class="block text-sm text-slate-600 mb-1">Sua resposta:</label>
-          <textarea th:id="'resp_' + ${q.id}"
-                    th:name="'responses[' + ${q.id} + ']'"
-                    rows="3"
-                    placeholder="Digite sua resposta..."
-                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"></textarea>
+  <div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="bg-white rounded-2xl shadow border border-red-100 p-8">
+      <div class="text-center mb-4">
+        <div class="inline-flex items-center gap-2 rounded-full bg-red-50 text-red-700 px-3 py-1 mb-3">
+          <span class="inline-block h-2 w-2 rounded-full bg-red-600"></span>
+          <span class="text-[11px] font-semibold tracking-wide uppercase">
+            Responder questionário
+          </span>
         </div>
-
-        <div th:if="${q.type?.toString() == 'QUANTITATIVA'}">
-          <label th:for="'resp_' + ${q.id}" class="block text-sm text-slate-600 mb-1">
-            Sua avaliação (0 a 5):
-          </label>
-          <input type="number"
-                 min="0" max="5"
-                 th:id="'resp_' + ${q.id}"
-                 th:name="'responses[' + ${q.id} + ']'"
-                 required
-                 class="w-28 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition" />
-        </div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">
+          <span th:text="${questionnaire.name}">Questionário</span>
+        </h1>
+        <p class="text-sm text-slate-500">
+          Responda todas as questões abaixo com atenção.
+        </p>
       </div>
 
-      <div class="flex justify-center pt-6">
-        <button type="submit"
-                class="bg-sky-600 text-white px-8 py-2 rounded-lg font-medium shadow hover:bg-sky-700 transition">
-          Enviar Respostas
-        </button>
-      </div>
-    </form>
+      <form th:action="@{/questionnaires/{id}/respond(id=${questionnaire.id})}"
+            method="post" class="space-y-6">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
 
-    <div class="text-center mt-8">
-      <a href="/questionnaires/available"
-         class="inline-block text-sky-700 hover:text-sky-900 font-medium text-sm">
-        ← Voltar aos questionários disponíveis
-      </a>
+        <div th:each="q,iter : ${questions}"
+             class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+          <p class="font-medium text-slate-800 mb-2">
+            <span th:text="${iter.index + 1} + '. '">1.</span>
+            <span th:text="${q.text}">Texto da questão</span>
+          </p>
+
+          <!-- QUALITATIVA -->
+          <div th:if="${q.type?.toString() == 'QUALITATIVA'}">
+            <textarea
+              th:name="${'responses[' + q.id + ']'}"
+              rows="3"
+              placeholder="Digite sua resposta..."
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm
+                     focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"></textarea>
+          </div>
+
+          <!-- QUANTITATIVA: múltipla escolha usando labels configuradas -->
+          <div th:if="${q.type?.toString() == 'QUANTITATIVA'}" class="space-y-2">
+            <p class="text-xs text-slate-500 mb-1">
+              Selecione uma opção:
+            </p>
+            <div class="space-y-1 text-sm text-slate-700">
+              <label class="flex items-center gap-2" th:if="${q.option1Label != null}">
+                <input type="radio"
+                       th:name="${'responses[' + q.id + ']'}"
+                       value="1"
+                       class="h-4 w-4 text-red-600 border-slate-300 focus:ring-red-500" />
+                <span th:text="${q.option1Label + ' (vale 1)'}">Discordo totalmente (vale 1)</span>
+              </label>
+              <label class="flex items-center gap-2" th:if="${q.option2Label != null}">
+                <input type="radio"
+                       th:name="${'responses[' + q.id + ']'}"
+                       value="2"
+                       class="h-4 w-4 text-red-600 border-slate-300 focus:ring-red-500" />
+                <span th:text="${q.option2Label + ' (vale 2)'}">Discordo parcialmente (vale 2)</span>
+              </label>
+              <label class="flex items-center gap-2" th:if="${q.option3Label != null}">
+                <input type="radio"
+                       th:name="${'responses[' + q.id + ']'}"
+                       value="3"
+                       class="h-4 w-4 text-red-600 border-slate-300 focus:ring-red-500" />
+                <span th:text="${q.option3Label + ' (vale 3)'}">Concordo parcialmente (vale 3)</span>
+              </label>
+              <label class="flex items-center gap-2" th:if="${q.option4Label != null}">
+                <input type="radio"
+                       th:name="${'responses[' + q.id + ']'}"
+                       value="4"
+                       class="h-4 w-4 text-red-600 border-slate-300 focus:ring-red-500" />
+                <span th:text="${q.option4Label + ' (vale 4)'}">Concordo totalmente (vale 4)</span>
+              </label>
+              <!-- 5ª opção opcional -->
+              <label class="flex items-center gap-2" th:if="${q.option5Label != null}">
+                <input type="radio"
+                       th:name="${'responses[' + q.id + ']'}"
+                       value="0"
+                       class="h-4 w-4 text-red-600 border-slate-300 focus:ring-red-500" />
+                <span th:text="${q.option5Label + ' (vale 0)'}">Não sei opinar (vale 0)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-center">
+          <button type="submit"
+                  class="bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-sm
+                         hover:bg-red-800 transition">
+            Enviar respostas
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="/questionnaires"
+           class="text-red-700 hover:text-red-900 text-sm font-medium inline-flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          ← Voltar para a lista de questionários
+        </a>
+      </div>
     </div>
   </div>
 </main>
 
 <footer class="border-t border-slate-200 bg-white">
-  <div class="max-w-4xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
+  <div class="max-w-6xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
     © 2025 Sistema de Avaliação CPA
   </div>
 </footer>
+
 </body>
 </html>

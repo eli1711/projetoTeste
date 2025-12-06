@@ -1,50 +1,96 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Avaliações Disponíveis</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-gradient-to-br from-slate-100 to-red-100 min-h-screen flex flex-col font-sans">
 
-<header class="bg-sky-700 text-white shadow">
-  <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-    <a href="/home" class="font-semibold tracking-tight text-lg">CPA - Aluno</a>
-    <nav class="flex items-center gap-4 text-sm">
-      <a href="/avaliacoes/disponiveis" class="hover:text-sky-200">Minhas Avaliações</a>
+<header class="bg-red-700 text-white shadow">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-red-800 text-xs font-bold">
+        CPA
+      </span>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm uppercase tracking-[0.2em] text-red-100">Sistema CPA</span>
+        <span class="text-base">Painel do Aluno</span>
+      </div>
+    </a>
+
+    <!-- MENU ALUNO -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <a href="/avaliacoes/disponiveis" class="hover:text-red-100 font-semibold underline underline-offset-4 transition">
+        Minhas Avaliações
+      </a>
       <form th:action="@{/logout}" method="post" class="inline">
         <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
         <button type="submit"
-                class="ml-3 px-3 py-1 rounded-lg bg-sky-900 hover:bg-sky-800 text-xs font-medium">
+                class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
           Sair
         </button>
       </form>
     </nav>
+
+    <!-- Fallback para outros perfis -->
+    <nav class="hidden md:flex items-center gap-4 text-xs font-medium"
+         sec:authorize="!hasAuthority('ROLE_ALUNO')">
+      <a href="/home" class="hover:text-red-100 transition">Início</a>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button type="submit"
+                class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </nav>
+
+    <!-- Versão mobile -->
+    <div class="flex md:hidden items-center gap-2">
+      <a href="/avaliacoes/disponiveis"
+         class="text-xs px-3 py-1.5 rounded-full bg-red-800 hover:bg-red-900 transition">
+        Avaliações
+      </a>
+      <form th:action="@{/logout}" method="post" class="inline" sec:authorize="isAuthenticated()">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </div>
   </div>
 </header>
 
 <main class="flex-1">
   <div class="max-w-4xl mx-auto px-4 py-10">
-    <div class="bg-white mt-4 rounded-2xl shadow border border-slate-200 p-8">
-      <h1 class="text-2xl font-bold text-slate-800 mb-2">
+    <div class="bg-white mt-4 rounded-2xl shadow border border-red-100 p-8">
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">
         Avaliações disponíveis para você
       </h1>
       <p class="text-sm text-slate-500 mb-6">
         Aqui você encontra as avaliações que estão abertas para resposta na sua turma.
       </p>
 
+      <!-- Nenhuma avaliação -->
       <div th:if="${#lists.isEmpty(avaliacoes)}"
            class="text-slate-500 italic flex flex-col items-center justify-center py-8">
         <span class="mb-2 text-3xl">📝</span>
         <p>Nenhuma avaliação disponível no momento.</p>
       </div>
 
+      <!-- Lista de avaliações -->
       <div th:if="${!#lists.isEmpty(avaliacoes)}" class="space-y-4">
         <div th:each="a : ${avaliacoes}"
              class="border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:bg-slate-50 transition">
           <div>
-            <p class="font-semibold text-slate-800" th:text="${a.questionario.name}">Questionário CPA</p>
+            <p class="font-semibold text-slate-900" th:text="${a.questionario.name}">Questionário CPA</p>
             <p class="text-sm text-slate-500">
               Turma: <span th:text="${a.turma.nome}">ADS 2º 2025</span>
             </p>
@@ -58,7 +104,7 @@
 
           <div class="flex md:flex-col items-center gap-2 md:items-end">
             <a th:href="@{/avaliacoes/{id}/responder(id=${a.id})}"
-               class="bg-sky-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow hover:bg-sky-700 transition">
+               class="bg-red-700 text-white text-sm px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-red-800 transition">
               Responder
             </a>
           </div>
@@ -66,7 +112,12 @@
       </div>
 
       <div class="mt-6">
-        <a href="/home" class="text-sky-700 text-sm font-medium hover:text-sky-900">
+        <a href="/home" class="text-red-700 text-sm font-medium hover:text-red-900 inline-flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
           ← Voltar ao painel
         </a>
       </div>

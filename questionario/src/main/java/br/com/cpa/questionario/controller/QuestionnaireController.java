@@ -56,7 +56,7 @@ public class QuestionnaireController {
     }
 
     // =====================================================================
-    //  RESPONDER QUESTIONÁRIO “PURO” (sem AvaliaçãoAplicada)
+    //  RESPONDER QUESTIONÁRIO “PURO” (DESATIVADO COMO COLETA OFICIAL)
     // =====================================================================
 
     @GetMapping("/{id}/respond")
@@ -73,50 +73,8 @@ public class QuestionnaireController {
                                       Principal principal,
                                       RedirectAttributes redirectAttributes) {
 
-        Questionnaire questionnaire = getQuestionnaireOrThrow(id);
-
-        String username = (principal != null ? principal.getName() : "anonimo");
-        System.out.println("Usuário " + username +
-                " enviou respostas para o questionário " + questionnaire.getId() +
-                ": " + formParams);
-
-        // 1) apaga respostas anteriores desse usuário para este questionário "puro"
-        answerRepository.deleteByQuestionQuestionnaireIdAndUserUsernameAndRespostaAlunoIsNull(id, username);
-
-        // 2) monta a lista de Answer novas
-        List<Answer> answersToSave = new ArrayList<>();
-
-        formParams.forEach((key, value) -> {
-            if (!key.startsWith("responses[")) return;
-            if (value == null || value.isBlank()) return;
-
-            try {
-                String idStr = key.substring("responses[".length(), key.length() - 1);
-                Long questionId = Long.parseLong(idStr);
-
-                Question question = questionRepository.findById(questionId)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Questão não encontrada: " + questionId));
-
-                Answer answer = new Answer();
-                answer.setQuestion(question);
-                answer.setResponse(value);
-                answer.setUserUsername(username);   // “dono” da resposta (questionário puro)
-                answer.setRespostaAluno(null);      // *** importante: sem avaliação aplicada
-
-                answersToSave.add(answer);
-
-            } catch (NumberFormatException ex) {
-                System.out.println("Parâmetro de resposta ignorado (id inválido): " + key);
-            }
-        });
-
-        if (!answersToSave.isEmpty()) {
-            answerRepository.saveAll(answersToSave);
-        }
-
-        redirectAttributes.addFlashAttribute("success",
-                "Respostas enviadas com sucesso!");
+        redirectAttributes.addFlashAttribute("error",
+                "Este questionário é um modelo. As respostas oficiais devem ser enviadas pela Avaliação Aplicada da sua turma.");
         return "redirect:/home";
     }
 
@@ -131,7 +89,6 @@ public class QuestionnaireController {
         var questions = questionRepository.findByQuestionnaireId(id);
         var answers = answerRepository.findByQuestionQuestionnaireIdAndRespostaAlunoIsNull(id);
 
-        // monta Map<QuestionId, List<Answer>> para o template questionnaire/answers.html
         Map<Long, List<Answer>> answersByQuestion = new HashMap<>();
         for (Question q : questions) {
             answersByQuestion.put(q.getId(), new ArrayList<>());
@@ -233,6 +190,10 @@ public class QuestionnaireController {
         Questionnaire questionnaire = getQuestionnaireOrThrow(id);
         model.addAttribute("questionnaire", questionnaire);
         model.addAttribute("question", new Question());
+
+        // popula o combo de "Item de Avaliação"
+        model.addAttribute("itensAvaliacao", ItemAvaliacao.values());
+
         return "questionnaire/add_question";
     }
 
@@ -240,7 +201,13 @@ public class QuestionnaireController {
     public String createQuestion(@PathVariable Long id,
                                  @RequestParam String text,
                                  @RequestParam String type,
+                                 @RequestParam ItemAvaliacao item,
                                  @RequestParam(required = false) Integer score,
+                                 @RequestParam(required = false) String option1Label,
+                                 @RequestParam(required = false) String option2Label,
+                                 @RequestParam(required = false) String option3Label,
+                                 @RequestParam(required = false) String option4Label,
+                                 @RequestParam(required = false) String option5Label,
                                  Model model) {
 
         Questionnaire questionnaire = getQuestionnaireOrThrow(id);
@@ -248,21 +215,70 @@ public class QuestionnaireController {
         Question question = new Question();
         question.setText(text);
 
+        // Item de avaliação (vem do select)
+        question.setItemAvaliacao(item);
+
+        // Como o grau de importância agora é respondido pelo aluno,
+        // definimos um valor padrão interno apenas para satisfazer o banco.
+        // Se não precisar mais da coluna, você pode removê-la depois.
+        try {
+            question.setGrauImportanciaModelo(GrauImportancia.MEDIA);
+        } catch (Exception ignored) {
+            // se o atributo não existir na entidade Question, pode remover esse bloco
+        }
+
         try {
             QuestionType questionType =
                     QuestionType.valueOf(type.toUpperCase(Locale.ROOT).trim());
             question.setType(questionType);
 
-            if (questionType == QuestionType.QUANTITATIVA && score != null) {
-                question.setScore(score);
+            if (questionType == QuestionType.QUANTITATIVA) {
+
+                if (score != null) {
+                    question.setScore(score);
+                } else {
+                    question.setScore(4);
+                }
+
+                if (option1Label == null || option1Label.isBlank()) {
+                    option1Label = "Discordo totalmente";
+                }
+                if (option2Label == null || option2Label.isBlank()) {
+                    option2Label = "Discordo parcialmente";
+                }
+                if (option3Label == null || option3Label.isBlank()) {
+                    option3Label = "Concordo parcialmente";
+                }
+                if (option4Label == null || option4Label.isBlank()) {
+                    option4Label = "Concordo totalmente";
+                }
+
+                question.setOption1Label(option1Label);
+                question.setOption2Label(option2Label);
+                question.setOption3Label(option3Label);
+                question.setOption4Label(option4Label);
+
+                if (option5Label != null && !option5Label.isBlank()) {
+                    question.setOption5Label(option5Label);
+                } else {
+                    question.setOption5Label(null);
+                }
+
             } else {
+                // qualitativa
                 question.setScore(null);
+                question.setOption1Label(null);
+                question.setOption2Label(null);
+                question.setOption3Label(null);
+                question.setOption4Label(null);
+                question.setOption5Label(null);
             }
 
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", "Tipo de questão inválido: " + type);
             model.addAttribute("questionnaire", questionnaire);
             model.addAttribute("question", question);
+            model.addAttribute("itensAvaliacao", ItemAvaliacao.values());
             return "questionnaire/add_question";
         }
 

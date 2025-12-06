@@ -1,37 +1,67 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Avaliação já respondida</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-gradient-to-br from-slate-100 to-red-100 min-h-screen flex flex-col font-sans">
 
-<header class="bg-sky-700 text-white shadow">
-  <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-    <a href="/home" class="font-semibold tracking-tight text-lg">CPA - Aluno</a>
-    <nav class="flex items-center gap-4 text-sm">
-      <a href="/avaliacoes/disponiveis" class="hover:text-sky-200">Minhas Avaliações</a>
+<header class="bg-red-700 text-white shadow">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-red-800 text-xs font-bold">
+        CPA
+      </span>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm uppercase tracking-[0.2em] text-red-100">Sistema CPA</span>
+        <span class="text-base">Painel do Aluno</span>
+      </div>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <a href="/avaliacoes/disponiveis" class="hover:text-red-100 transition">
+        Minhas Avaliações
+      </a>
       <form th:action="@{/logout}" method="post" class="inline">
         <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
         <button type="submit"
-                class="ml-3 px-3 py-1 rounded-lg bg-sky-900 hover:bg-sky-800 text-xs font-medium">
+                class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
           Sair
         </button>
       </form>
     </nav>
+
+    <!-- Versão mobile -->
+    <div class="flex md:hidden items-center gap-2">
+      <a href="/avaliacoes/disponiveis"
+         class="text-xs px-3 py-1.5 rounded-full bg-red-800 hover:bg-red-900 transition">
+        Avaliações
+      </a>
+      <form th:action="@{/logout}" method="post" class="inline" sec:authorize="isAuthenticated()">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </div>
   </div>
 </header>
 
 <main class="flex-1 flex items-center justify-center px-4 py-10">
-  <div class="bg-white border border-slate-200 shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+  <div class="bg-white border border-red-100 shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
     <div class="mb-3">
-      <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-sky-50 text-sky-700 text-2xl">
+      <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-50 text-red-700 text-2xl">
         ✓
       </span>
     </div>
-    <h1 class="text-2xl font-bold text-slate-800 mb-3">
+    <h1 class="text-2xl font-bold text-slate-900 mb-3">
       Avaliação já respondida
     </h1>
     <p class="text-slate-600 mb-6 text-sm">
@@ -41,11 +71,11 @@
 
     <div class="flex flex-col gap-3 items-center">
       <a href="/avaliacoes/disponiveis"
-         class="inline-block bg-sky-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-sky-700 transition text-sm">
+         class="inline-block bg-red-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm hover:bg-red-800 transition text-sm">
         Ver outras avaliações disponíveis
       </a>
       <a href="/home"
-         class="inline-block text-sky-700 hover:text-sky-900 font-medium text-sm">
+         class="inline-block text-red-700 hover:text-red-900 font-medium text-sm">
         ← Voltar ao painel
       </a>
     </div>

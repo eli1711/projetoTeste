@@ -7,29 +7,70 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-slate-100 min-h-screen flex items-center justify-center font-sans">
-  <div class="bg-white border border-slate-200 shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
-    <div class="mb-4">
-      <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-50 text-red-600 text-xl font-bold">
-        !
+<body class="bg-gradient-to-br from-slate-100 to-red-100 min-h-screen flex items-center justify-center font-sans">
+  <div class="bg-white border border-red-100 shadow-xl rounded-2xl p-10 max-w-md w-full text-center relative overflow-hidden">
+
+    <!-- Barra sutil no topo -->
+    <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-700 via-red-500 to-red-700"></div>
+
+    <!-- Ícone / status -->
+    <div class="mt-3 mb-4 flex flex-col items-center">
+      <div class="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-3">
+        <!-- Ícone escudo com X -->
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-7 w-7 text-red-700" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 5 5v6c0 5 3.5 9 7 11 3.5-2 7-6 7-11V5l-7-3z" />
+          <path d="m10 10 4 4m0-4-4 4" />
+        </svg>
+      </div>
+
+      <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-[11px] font-semibold tracking-wide uppercase mb-2">
+        Acesso negado
       </span>
+
+      <h1 class="text-3xl font-extrabold text-red-700 tracking-tight">
+        403
+      </h1>
+      <h2 class="text-lg font-semibold text-slate-800 mt-1">
+        Você não tem permissão para acessar esta página
+      </h2>
     </div>
-    <h1 class="text-3xl font-bold text-red-600 mb-2 tracking-tight">403</h1>
-    <h2 class="text-lg font-semibold text-slate-800 mb-3">Acesso negado</h2>
-    <p class="text-slate-600 text-sm mb-6">
-      Você não tem permissão para acessar este recurso com o perfil atual.
-      Verifique se está usando a conta correta ou entre em contato com a coordenação
-      para revisar seu nível de acesso.
+
+    <p class="text-slate-600 text-sm mb-6 leading-relaxed">
+      O perfil atualmente autenticado não possui acesso ao recurso solicitado.
+      Confirme se está utilizando a conta correta ou entre em contato com a coordenação
+      / suporte para revisar seu nível de acesso.
     </p>
+
     <div class="flex flex-col gap-3">
       <a href="/home"
-         class="bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow
-                hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:outline-none transition">
-        Ir para o painel
+         class="bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm
+                hover:bg-red-800 focus:ring-2 focus:ring-red-500 focus:outline-none transition
+                inline-flex items-center justify-center gap-2">
+        <!-- Ícone casa -->
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 11 9-7 9 7" />
+          <path d="M5 10v10h14V10" />
+        </svg>
+        <span>Ir para o painel</span>
       </a>
+
       <a href="/login"
-         class="text-sky-700 hover:text-sky-900 text-sm font-medium">
-        Fazer login com outra conta
+         class="text-red-700 hover:text-red-900 text-sm font-medium inline-flex items-center justify-center gap-1.5">
+        <!-- Ícone troca de usuário -->
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 17H5a2 2 0 0 1-2-2V7" />
+          <path d="M16 17h3a2 2 0 0 0 2-2V7" />
+          <path d="M7 9l-4-4" />
+          <path d="M17 9l4-4" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        <span>Fazer login com outra conta</span>
       </a>
     </div>
   </div>

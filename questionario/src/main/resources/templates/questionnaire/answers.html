@@ -1,65 +1,77 @@
 <!DOCTYPE html>
-<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title th:text="'Respostas do Questionário: ' + ${questionnaire.name}"></title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <title>Avaliações Aplicadas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen py-10 px-6 flex flex-col items-center">
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-5xl border border-gray-200">
-    <h1 class="text-2xl font-bold text-gray-800 mb-8 text-center tracking-tight"
-        th:text="'Respostas - ' + ${questionnaire.name}">
-      Respostas do Questionário
-    </h1>
 
-    <!-- Caso não haja perguntas -->
-    <div th:if="${#lists.isEmpty(questions)}" class="text-center text-gray-600 py-8">
-      <p class="italic">Este questionário não possui perguntas cadastradas.</p>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+<header class="bg-red-700 text-white shadow">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/home" class="text-lg font-semibold flex items-center gap-3">
+            <span class="inline-flex items-center justify-center h-9 w-9 rounded bg-red-800 text-xs font-bold">CPA</span>
+            <span>Painel Administrativo</span>
+        </a>
+        <nav class="hidden md:flex gap-5 text-xs font-medium">
+            <a href="/avaliacoes" class="hover:text-red-100 transition">Avaliações</a>
+            <a href="/analise/avaliacoes" class="hover:text-red-100 transition">Relatórios</a>
+        </nav>
+    </div>
+</header>
+
+<main class="flex-1">
+
+    <div class="max-w-6xl mx-auto px-4 py-10">
+
+        <div class="flex justify-between mb-6">
+            <h1 class="text-2xl font-bold text-slate-800">Avaliações Aplicadas</h1>
+            <a href="/avaliacoes/new"
+               class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 shadow">
+                Aplicar Avaliação
+            </a>
+        </div>
+
+        <div class="bg-white p-6 border border-slate-200 rounded-xl shadow">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-200 text-slate-700">
+                <tr>
+                    <th class="px-4 py-2 text-left">Turma</th>
+                    <th class="px-4 py-2 text-left">Questionário</th>
+                    <th class="px-4 py-2 text-left">Data</th>
+                    <th class="px-4 py-2 text-center">Ações</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="a : ${avaliacoes}" class="border-b border-slate-200 hover:bg-slate-50">
+                    <td class="px-4 py-2" th:text="${a.turma.nome}">Turma</td>
+                    <td class="px-4 py-2" th:text="${a.questionario.name}">Questionário</td>
+                    <td class="px-4 py-2" th:text="${#temporals.format(a.dataAplicacao, 'dd/MM/yyyy')}">
+                        01/12/2025
+                    </td>
+
+                    <td class="px-4 py-2 text-center space-x-4">
+                        <a th:href="@{/avaliacoes/{id}/respostas(id=${a.id})}"
+                           class="text-blue-600 hover:underline">
+                            Ver Respostas
+                        </a>
+
+                        <a th:href="@{/avaliacoes/{id}/delete(id=${a.id})}"
+                           onclick="return confirm('Excluir aplicação?')"
+                           class="text-red-600 hover:underline">
+                            Excluir
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
 
-    <!-- Loop das questões -->
-    <div th:each="q : ${questions}" class="mb-10">
-      <h2 class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4"
-          th:text="${q.text}">
-        Texto da questão
-      </h2>
+</main>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-700 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-          <thead class="bg-gray-100 text-gray-800 uppercase text-xs">
-            <tr>
-              <th class="px-4 py-3 font-semibold">Aluno</th>
-              <th class="px-4 py-3 font-semibold">Resposta</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- answersByQuestion é um Map<Long, List<Answer>> vindo do controller -->
-            <tr th:each="a : ${answersByQuestion[q.id]}"
-                class="border-t border-gray-100 hover:bg-gray-50 transition duration-150">
-              <!-- AQUI AJUSTAMOS PARA userUsername -->
-              <td class="px-4 py-3" th:text="${a.userUsername}">login do aluno</td>
-              <td class="px-4 py-3" th:text="${a.response}">Texto da resposta</td>
-            </tr>
-
-            <!-- Quando não há respostas para a questão -->
-            <tr th:if="${#lists.isEmpty(answersByQuestion[q.id])}">
-              <td colspan="2" class="px-4 py-3 italic text-gray-500 text-center">
-                Nenhuma resposta registrada para esta questão.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Link de retorno -->
-    <div class="text-center mt-10">
-      <a href="/questionnaires"
-         class="inline-block text-blue-600 hover:text-blue-800 font-medium transition duration-150">
-        ← Voltar para a lista de questionários
-      </a>
-    </div>
-  </div>
 </body>
 </html>

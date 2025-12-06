@@ -1,0 +1,37 @@
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: cpa-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: questionario_db
+      MYSQL_USER: cpa_user
+      MYSQL_PASSWORD: cpa_pass
+    ports:
+      - "3307:3306"
+    command: [
+      "--default-authentication-plugin=mysql_native_password",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci"
+    ]
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: cpa-app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/questionario_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo
+      SPRING_DATASOURCE_USERNAME: cpa_user
+      SPRING_DATASOURCE_PASSWORD: cpa_pass
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "8098:8080"
+
+volumes:
+  db_data:

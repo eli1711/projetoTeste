@@ -1,8 +1,7 @@
 package br.com.cpa.questionario.controller;
 
-import br.com.cpa.questionario.model.StatusAluno;
-import br.com.cpa.questionario.model.Turma;
-import br.com.cpa.questionario.model.User;
+import br.com.cpa.questionario.model.*;
+import br.com.cpa.questionario.repository.AlunoRepository;
 import br.com.cpa.questionario.repository.TurmaRepository;
 import br.com.cpa.questionario.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,13 +26,16 @@ public class UserController {
     private final UserRepository userRepository;
     private final TurmaRepository turmaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AlunoRepository alunoRepository;
 
     public UserController(UserRepository userRepository,
                           TurmaRepository turmaRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          AlunoRepository alunoRepository) {
         this.userRepository = userRepository;
         this.turmaRepository = turmaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.alunoRepository = alunoRepository;
     }
 
     // ========== CADASTRO PÚBLICO DE ALUNO ==========
@@ -58,12 +60,12 @@ public class UserController {
 
         // validações simples
         if (user.getUsername() == null || user.getUsername().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Login é obrigatório.");
+            redirectAttributes.addFlashAttribute("error", "Login (RA) é obrigatório.");
             return "redirect:/users/aluno/registro";
         }
 
         if (user.getPassword() == null || user.getPassword().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Senha é obrigatória.");
+            redirectAttributes.addFlashAttribute("error", "Senha (CPF) é obrigatória.");
             return "redirect:/users/aluno/registro";
         }
 
@@ -72,7 +74,8 @@ public class UserController {
             return "redirect:/users/aluno/registro";
         }
 
-        // turma
+        // turma (pode ser null, mas sua regra de negócio é que ele escolha no primeiro login;
+        // aqui podemos ignorar e deixar null, ou permitir escolher já)
         if (turmaId != null) {
             Turma turma = turmaRepository.findById(turmaId).orElse(null);
             user.setTurma(turma);
@@ -84,10 +87,23 @@ public class UserController {
         user.setStatus(StatusAluno.ATIVO);
         user.setRole("ROLE_ALUNO");
 
-        // criptografa senha
+        // senha = CPF criptografado
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+        // RA espelhado no campo ra
+        user.setRa(user.getUsername());
+
         userRepository.save(user);
+
+        // cria o registro na tabela aluno
+        Aluno aluno = new Aluno();
+        aluno.setNome(user.getName());
+        aluno.setRa(user.getUsername());
+        aluno.setCpf("********"); // se quiser guardar CPF real, passe antes da criptografia
+        aluno.setEmail(user.getEmail());
+        aluno.setUser(user);
+        aluno.setTurma(user.getTurma());
+        alunoRepository.save(aluno);
 
         redirectAttributes.addFlashAttribute("success",
                 "Cadastro realizado com sucesso! Agora você já pode fazer login.");
@@ -95,6 +111,7 @@ public class UserController {
     }
 
     // ========== LISTA DE USUÁRIOS (ADMIN) ==========
+
     @GetMapping
     public String list(Model model) {
         List<User> users = userRepository.findAll();
@@ -103,6 +120,7 @@ public class UserController {
     }
 
     // ========== FORMULÁRIO NOVO USUÁRIO (ADMIN) ==========
+
     @GetMapping("/new")
     public String newUser(Model model) {
         User user = new User();
@@ -115,6 +133,7 @@ public class UserController {
     }
 
     // ========== EDITAR USUÁRIO EXISTENTE (ADMIN) ==========
+
     @GetMapping("/{username}/edit")
     public String editUser(@PathVariable String username, Model model) {
         User user = userRepository.findByUsername(username);
@@ -128,6 +147,7 @@ public class UserController {
     }
 
     // ========== SALVAR (CRIAR/ATUALIZAR) (ADMIN) ==========
+
     @PostMapping("/save")
     public String saveUser(@ModelAttribute("user") User user,
                            @RequestParam(value = "turmaId", required = false) Long turmaId,
@@ -161,6 +181,7 @@ public class UserController {
     }
 
     // ========== EXCLUIR (ADMIN) ==========
+
     @PostMapping("/{username}/delete")
     public String delete(@PathVariable String username,
                          RedirectAttributes redirectAttributes) {
@@ -170,6 +191,7 @@ public class UserController {
     }
 
     // ========= CSV MODELO DE ALUNOS =========
+
     @GetMapping("/alunos/template-csv")
     public void downloadAlunoTemplate(HttpServletResponse response) throws IOException {
         String filename = "modelo_cadastro_alunos.csv";
@@ -178,12 +200,13 @@ public class UserController {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
         try (PrintWriter writer = response.getWriter()) {
-            writer.println("nome;email;username;senha;ra;turmaNome;role");
-            writer.println("João da Silva;joao.silva@faculdade.edu;br.joao;Senha123;123456;ADS 2º Semestre 2025;ROLE_ALUNO");
+            writer.println("nome;ra;cpf");
+            writer.println("João da Silva;123456;12345678900");
         }
     }
 
     // ========= IMPORTAR CSV DE ALUNOS =========
+    // Formato: Nome;RA;CPF
     @PostMapping("/alunos/import")
     public String importAlunosCsv(@RequestParam("file") MultipartFile file,
                                   RedirectAttributes redirectAttributes) {
@@ -204,7 +227,8 @@ public class UserController {
             while ((line = reader.readLine()) != null) {
                 linhaAtual++;
 
-                if (linhaAtual == 1 && line.toLowerCase().contains("nome;email;username")) {
+                // Cabeçalho: nome;ra;cpf
+                if (linhaAtual == 1 && line.toLowerCase().contains("nome;ra;cpf")) {
                     continue;
                 }
 
@@ -213,49 +237,53 @@ public class UserController {
                 }
 
                 String[] cols = line.split(";", -1);
-                if (cols.length < 6) {
+                if (cols.length < 3) {
                     ignorados++;
                     continue;
                 }
 
                 String nome = cols[0].trim();
-                String email = cols[1].trim();
-                String username = cols[2].trim();
-                String senhaPlano = cols[3].trim();
-                String ra = cols[4].trim();
-                String turmaNome = cols[5].trim();
-                String roleCsv = (cols.length >= 7 ? cols[6].trim() : "ROLE_ALUNO");
+                String ra   = cols[1].trim();
+                String cpf  = cols[2].trim();
 
-                if (username.isEmpty() || email.isEmpty()) {
+                if (ra.isEmpty() || cpf.isEmpty()) {
                     ignorados++;
                     continue;
                 }
+
+                String username = ra; // login = RA
 
                 if (userRepository.existsById(username)) {
                     ignorados++;
                     continue;
                 }
 
-                Turma turma = null;
-                if (!turmaNome.isEmpty()) {
-                    turma = turmaRepository.findByNome(turmaNome).orElse(null);
-                }
-
+                // ====== cria User (login) ======
                 User user = new User();
                 user.setUsername(username);
                 user.setName(nome);
-                user.setEmail(email);
-                user.setRa(ra);
-                user.setTurma(turma);
-                user.setStatus(StatusAluno.ATIVO);
+                user.setEmail(ra + "@aluno.sem-email.com"); // pode trocar depois
                 user.setRole("ROLE_ALUNO");
+                user.setStatus(StatusAluno.ATIVO);
+                user.setTurma(null); // será definido no primeiro login
+                user.setRa(ra);
 
-                if (senhaPlano == null || senhaPlano.isBlank()) {
-                    senhaPlano = "Aluno123";
-                }
-                user.setPassword(passwordEncoder.encode(senhaPlano));
+                // senha = CPF
+                user.setPassword(passwordEncoder.encode(cpf));
 
                 userRepository.save(user);
+
+                // ====== cria Aluno (tabela separada) ======
+                Aluno aluno = new Aluno();
+                aluno.setNome(nome);
+                aluno.setRa(ra);
+                aluno.setCpf(cpf);
+                aluno.setEmail(user.getEmail());
+                aluno.setUser(user);
+                aluno.setTurma(null);
+
+                alunoRepository.save(aluno);
+
                 criados++;
             }
 

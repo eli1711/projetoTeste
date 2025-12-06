@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
@@ -9,169 +11,414 @@
 
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-<header class="bg-sky-700 text-white shadow">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-2">
-      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-sky-600 text-xs font-bold">
+<header class="bg-red-700 text-white shadow">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+
+    <!-- Logo / título -->
+    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-red-800 text-xs font-bold">
         CPA
       </span>
-      <span>CPA - Avaliações Institucionais</span>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm uppercase tracking-[0.2em] text-red-100">Sistema CPA</span>
+        <span class="text-base">Avaliações Institucionais</span>
+      </div>
     </a>
-    <nav class="flex items-center gap-4 text-sm">
-      <a href="/avaliacoes" class="hover:text-sky-200 transition">Avaliações</a>
-      <a href="/questionnaires" class="hover:text-sky-200 transition">Questionários</a>
-      <a href="/users" class="hover:text-sky-200 transition">Usuários</a>
-      <a href="/turmas" class="hover:text-sky-200 transition">Turmas</a>
+
+    <!-- MENU ADMIN / GESTOR -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_GESTOR')">
+      <a href="/avaliacoes" class="hover:text-red-100 transition">Avaliações</a>
+      <a href="/questionnaires" class="hover:text-red-100 transition">Questionários</a>
+      <a href="/users" class="hover:text-red-100 transition">Usuários</a>
+      <a href="/turmas" class="hover:text-red-100 transition">Turmas</a>
+      <a href="/analise/avaliacoes" class="hover:text-red-100 transition">Análises</a>
+      <a href="/alunos" class="hover:text-red-100 transition">Alunos</a>
+
       <form th:action="@{/logout}" method="post" class="inline">
         <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
         <button
           type="submit"
-          class="ml-3 px-3 py-1 rounded-lg bg-sky-900 hover:bg-sky-800 text-xs font-medium shadow-sm transition">
+          class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
           Sair
         </button>
       </form>
     </nav>
+
+    <!-- MENU ALUNO -->
+    <nav class="hidden md:flex items-center gap-4 text-xs font-medium"
+         sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <a href="/avaliacoes/disponiveis" class="hover:text-red-100 transition">
+        Minhas Avaliações
+      </a>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </nav>
+
+    <!-- Versão compacta (mobile) – apenas logout/atalho principal se quiser evoluir depois -->
+    <div class="flex md:hidden items-center gap-2">
+      <nav sec:authorize="hasAuthority('ROLE_ALUNO')">
+        <a href="/avaliacoes/disponiveis"
+           class="text-xs px-3 py-1.5 rounded-full bg-red-800 hover:bg-red-900 transition">
+          Minhas Avaliações
+        </a>
+      </nav>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </div>
+
   </div>
 </header>
 
 <main class="flex-1">
-  <div class="max-w-6xl mx-auto px-4 py-10">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+  <div class="max-w-6xl mx-auto px-4 py-8 md:py-10">
+
+    <!-- TOPO ADMIN / GESTOR -->
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_GESTOR')">
+
       <div>
+        <div class="inline-flex items-center gap-2 rounded-full bg-red-100 text-red-800 px-3 py-1 mb-3">
+          <span class="inline-block h-2 w-2 rounded-full bg-red-600"></span>
+          <span class="text-[11px] font-semibold tracking-wide uppercase">
+            Painel do Gestor / Administrador
+          </span>
+        </div>
         <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
           Bem-vindo ao Sistema de Avaliação CPA
         </h1>
         <p class="text-slate-600 text-sm md:text-base max-w-2xl">
-          Utilize os atalhos abaixo para gerenciar questionários, turmas, usuários e acompanhar
-          as avaliações aplicadas. Tudo em um só lugar.
+          Centralize o cadastro de turmas, criação de questionários, aplicação das avaliações
+          e acompanhamento dos resultados em um único painel.
         </p>
       </div>
-      <div class="text-xs text-slate-500 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
-        <p class="font-semibold text-slate-700 mb-1">Dica rápida</p>
-        <p>
-          Comece cadastrando as turmas, depois crie os questionários e, por fim, aplique as avaliações.
+
+      <div class="text-xs text-slate-600 bg-white border border-red-100 rounded-xl px-4 py-3 shadow-sm max-w-sm">
+        <p class="font-semibold text-red-800 mb-1 flex items-center gap-1.5">
+          <!-- Ícone lâmpada -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <path d="M12 2a7 7 0 0 0-4 12.83V16a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1.17A7 7 0 0 0 12 2z" />
+          </svg>
+          Dica rápida
+        </p>
+        <p class="leading-relaxed">
+          1) Cadastre as turmas · 2) Crie os modelos de questionário · 3) Aplique as avaliações
+          para cada turma e acompanhe os resultados.
         </p>
       </div>
     </div>
 
-    <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
-      Atalhos principais
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Card: Avaliações aplicadas (admin/gestor) -->
-      <a href="/avaliacoes"
-         class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-                hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Avaliações Aplicadas</h3>
-          <p class="text-sm text-slate-600">
-            Gerencie quais questionários estão aplicados em cada turma, defina datas de início e fim
-            e acompanhe o status (aberta, fechada, encerrada).
-          </p>
-        </div>
-        <span class="mt-4 inline-flex items-center text-sm text-sky-700 font-medium">
-          Ir para Avaliações →
+    <!-- TOPO ALUNO -->
+    <div class="mb-8" sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <div class="inline-flex items-center gap-2 rounded-full bg-red-100 text-red-800 px-3 py-1 mb-3">
+        <span class="inline-block h-2 w-2 rounded-full bg-red-600"></span>
+        <span class="text-[11px] font-semibold tracking-wide uppercase">
+          Painel do Aluno
         </span>
-      </a>
+      </div>
+      <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
+        Olá! 👋 Bem-vindo ao painel do aluno
+      </h1>
+      <p class="text-slate-600 text-sm md:text-base max-w-2xl">
+        Aqui você encontra as avaliações institucionais abertas para resposta.
+        Sua participação é essencial para melhorar a qualidade dos cursos e da instituição.
+      </p>
+    </div>
 
-      <!-- Card: Modelos de Questionário -->
-      <a href="/questionnaires"
-         class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-                hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Modelos de Questionário</h3>
-          <p class="text-sm text-slate-600">
-            Crie, edite e reutilize modelos de questionário para diferentes semestres,
-            cursos e turmas, sem perder o histórico.
-          </p>
-        </div>
-        <span class="mt-4 inline-flex items-center text-sm text-sky-700 font-medium">
-          Gerenciar Questionários →
+    <!-- BLOCO DE ATALHOS (ADMIN / GESTOR) -->
+    <section sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_GESTOR')" class="mb-10">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+          Atalhos principais
+        </h2>
+        <span class="text-[11px] text-slate-500">
+          Acesse rapidamente as áreas mais usadas do sistema.
         </span>
-      </a>
-
-      <!-- Card: Usuários -->
-      <a href="/users"
-         class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-                hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Usuários</h3>
-          <p class="text-sm text-slate-600">
-            Cadastre alunos, gestores e administradores, definindo os perfis de acesso
-            de forma simples e organizada.
-          </p>
-        </div>
-        <span class="mt-4 inline-flex items-center text-sm text-sky-700 font-medium">
-          Gerenciar Usuários →
-        </span>
-      </a>
-
-      <!-- Card: Avaliações disponíveis para responder (aluno) -->
-      <a href="/avaliacoes/disponiveis"
-         class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-                hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Avaliações Disponíveis</h3>
-          <p class="text-sm text-slate-600">
-            Visualize rapidamente as avaliações abertas para resposta, de acordo com a turma do aluno.
-          </p>
-        </div>
-        <span class="mt-4 inline-flex items-center text-sm text-sky-700 font-medium">
-          Ver Avaliações Disponíveis →
-        </span>
-      </a>
-
-      <!-- Card: Turmas (com botões) -->
-      <div
-        class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-               hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Turmas</h3>
-          <p class="text-sm text-slate-600">
-            Cadastre novas turmas, edite informações existentes e visualize todas as turmas por
-            curso, semestre e ano letivo.
-          </p>
-        </div>
-
-        <div class="mt-4 flex flex-wrap gap-2">
-          <!-- Botão: lista de turmas -->
-          <a href="/turmas"
-             class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg border border-sky-700
-                    text-sky-700 hover:bg-sky-50 transition">
-            Ver turmas
-          </a>
-
-          <!-- Botão: nova turma -->
-          <a href="/turmas/new"
-             class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg bg-sky-700 text-white
-                    font-medium hover:bg-sky-800 shadow-sm transition">
-            Nova turma
-          </a>
-        </div>
       </div>
 
-      <!-- Card: Análise das Avaliações -->
-      <a href="/analise/avaliacoes"
-         class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
-                hover:shadow-md hover:-translate-y-0.5 transition transform">
-        <div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">Análise das Avaliações</h3>
-          <p class="text-sm text-slate-600">
-            Visualize estatísticas das respostas por turma, ano e avaliação aplicada.
-            Acompanhe médias das questões quantitativas e a distribuição das respostas.
-          </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Avaliações aplicadas -->
+        <a href="/avaliacoes"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone calendário/check -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4" />
+                  <path d="M8 2v4" />
+                  <path d="M3 10h18" />
+                  <path d="m9 16 2 2 4-4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Avaliações Aplicadas</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Configure quais questionários estão aplicados em cada turma, defina datas
+              e acompanhe o status (aberta, encerrada).
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Ir para Avaliações →
+          </span>
+        </a>
+
+        <!-- Modelos de Questionário -->
+        <a href="/questionnaires"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone clipboard -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 3h6a2 2 0 0 1 2 2v1H7V5a2 2 0 0 1 2-2z" />
+                  <rect x="5" y="6" width="14" height="15" rx="2" />
+                  <path d="M9 10h6" />
+                  <path d="M9 14h4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Modelos de Questionário</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Crie e reutilize modelos de questionários para diferentes cursos, períodos e turmas,
+              mantendo o histórico de versões.
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Gerenciar Questionários →
+          </span>
+        </a>
+
+        <!-- Usuários -->
+        <a href="/users"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone usuários -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="3" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Usuários</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Cadastre e gerencie perfis de acesso: administradores, gestores, professores
+              e demais usuários do sistema.
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Gerenciar Usuários →
+          </span>
+        </a>
+
+        <!-- Avaliações disponíveis -->
+        <a href="/avaliacoes/disponiveis"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone lista -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 6h11" />
+                  <path d="M9 12h11" />
+                  <path d="M9 18h11" />
+                  <path d="M4 6h.01" />
+                  <path d="M4 12h.01" />
+                  <path d="M4 18h.01" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Avaliações Disponíveis</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Veja rapidamente quais avaliações estão abertas para resposta, conforme
+              as turmas cadastradas.
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Ver Avaliações Disponíveis →
+          </span>
+        </a>
+
+        <!-- Turmas -->
+        <div
+          class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                 hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone sala/aula (quadro) -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="12" rx="2" />
+                  <path d="M7 20h10" />
+                  <path d="M12 16v4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Turmas</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Cadastre novas turmas, atualize dados existentes e visualize a estrutura
+              por curso, semestre e ano letivo.
+            </p>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <a href="/turmas"
+               class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg border border-red-700
+                      text-red-700 hover:bg-red-50 transition">
+              Ver turmas
+            </a>
+
+            <a href="/turmas/new"
+               class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg bg-red-700 text-white
+                      font-medium hover:bg-red-800 shadow-sm transition">
+              Nova turma
+            </a>
+          </div>
         </div>
-        <span class="mt-4 inline-flex items-center text-sm text-sky-700 font-medium">
-          Ir para Análises →
-        </span>
-      </a>
-    </div>
+
+        <!-- Alunos -->
+        <div
+          class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                 hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone graduação/aluno -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 10 12 6l8 4-8 4-8-4z" />
+                  <path d="M6 12v4c0 1.1 2.7 2 6 2s6-.9 6-2v-4" />
+                  <path d="M12 22v-4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Alunos</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Gerencie cadastros de alunos e importe novos registros via arquivo CSV
+              de forma rápida e segura.
+            </p>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <a href="/alunos"
+               class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg border border-red-700
+                      text-red-700 hover:bg-red-50 transition">
+              Ver alunos cadastrados
+            </a>
+
+            <a href="/alunos/import"
+               class="inline-flex items-center justify-center text-sm px-4 py-2 rounded-lg bg-red-700 text-white
+                      font-medium hover:bg-red-800 shadow-sm transition">
+              Importar alunos (CSV)
+            </a>
+          </div>
+        </div>
+
+        <!-- Análise das Avaliações -->
+        <a href="/analise/avaliacoes"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone gráfico -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18" />
+                  <path d="M7 16l3-4 3 3 4-7" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">Análise das Avaliações</h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Consulte gráficos e estatísticas por turma, período e avaliação.
+              Visualize médias e distribuições de resposta.
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Ir para Análises →
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- BLOCO ESPECÍFICO DO ALUNO -->
+    <section sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="/avaliacoes/disponiveis"
+           class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between
+                  hover:shadow-md hover:-translate-y-0.5 transition transform">
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <!-- Ícone formulário -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="3" width="16" height="18" rx="2" />
+                  <path d="M8 7h8" />
+                  <path d="M8 11h5" />
+                  <path d="M8 15h6" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">
+                Minhas Avaliações Disponíveis
+              </h3>
+            </div>
+            <p class="text-sm text-slate-600">
+              Acesse todas as avaliações institucionais abertas para você responder
+              nas turmas em que está matriculado.
+            </p>
+          </div>
+          <span class="mt-4 inline-flex items-center text-sm text-red-700 font-medium">
+            Acessar avaliações →
+          </span>
+        </a>
+      </div>
+    </section>
+
   </div>
 </main>
 
 <footer class="border-t border-slate-200 bg-white">
-  <div class="max-w-6xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
+  <div class="max-w-6xl mx-auto px-4 py-4 text-center text-[11px] text-slate-500">
     © 2025 Sistema de Avaliação CPA — Desenvolvido com Spring Boot &amp; Thymeleaf
   </div>
 </footer>

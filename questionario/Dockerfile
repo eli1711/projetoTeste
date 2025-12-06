@@ -1,37 +1,25 @@
-# ===== STAGE 1: BUILD =====
-FROM eclipse-temurin:21-jdk AS build
+FROM docker.io/maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copia Maven Wrapper e POM primeiro (melhor cache)
-COPY mvnw .
-COPY .mvn/ .mvn/
 COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-RUN chmod +x mvnw
-
-# Baixa dependências para cache
-RUN ./mvnw dependency:go-offline -B
-
-# Copia código-fonte
 COPY src ./src
 
-# Build do projeto (gera o JAR)
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
-# ===== STAGE 2: RUNTIME =====
-FROM eclipse-temurin:21-jre-jammy
+FROM docker.io/eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Copia o JAR gerado no stage de build
-COPY --from=build /app/target/questionario-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
-# Render define a variável $PORT. Vamos mandar o Spring subir nessa porta.
-ENV JAVA_OPTS=""
-
-# (Opcional) só informativo; Render não depende do EXPOSE, mas não atrapalha
 EXPOSE 8080
 
-# Comando de inicialização
-CMD ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
+
+ENV SPRING_PROFILES_ACTIVE=prod
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+

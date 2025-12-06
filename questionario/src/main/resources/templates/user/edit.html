@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,69 +11,196 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex flex-col items-center py-10 px-6">
-  <div class="bg-white shadow-xl rounded-2xl p-10 w-full max-w-3xl border border-gray-200">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center tracking-tight"
-        th:text="${cadastroAluno} ? 'Cadastro de Aluno' : 'Cadastro de Usuário'">
-      Cadastro
-    </h1>
+<body class="bg-gradient-to-br from-slate-100 to-red-100 min-h-screen flex flex-col font-sans">
+
+<!-- Cabeçalho padrão -->
+<header class="bg-red-700 text-white shadow">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center gap-4">
+
+    <a href="/home" class="font-semibold tracking-tight text-lg flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-9 w-9 rounded-md bg-red-800 text-xs font-bold">
+        CPA
+      </span>
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm uppercase tracking-[0.2em] text-red-100">Sistema CPA</span>
+        <span class="text-base">Avaliações Institucionais</span>
+      </div>
+    </a>
+
+    <!-- MENU ADMIN / GESTOR -->
+    <nav class="hidden md:flex items-center gap-5 text-xs font-medium"
+         sec:authorize="hasAnyAuthority('ROLE_ADMIN','ROLE_GESTOR')">
+      <a href="/avaliacoes" class="hover:text-red-100 transition">Avaliações</a>
+      <a href="/questionnaires" class="hover:text-red-100 transition">Questionários</a>
+      <a href="/users" class="hover:text-red-100 transition">Usuários</a>
+      <a href="/turmas" class="hover:text-red-100 transition">Turmas</a>
+      <a href="/analise/avaliacoes" class="hover:text-red-100 transition">Análises</a>
+      <a href="/alunos" class="hover:text-red-100 transition">Alunos</a>
+
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </nav>
+
+    <!-- MENU ALUNO -->
+    <nav class="hidden md:flex items-center gap-4 text-xs font-medium"
+         sec:authorize="hasAuthority('ROLE_ALUNO')">
+      <a href="/avaliacoes/disponiveis" class="hover:text-red-100 transition">
+        Minhas Avaliações
+      </a>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="ml-2 px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </nav>
+
+    <!-- Versão compacta (mobile) -->
+    <div class="flex md:hidden items-center gap-2">
+      <nav sec:authorize="hasAuthority('ROLE_ALUNO')">
+        <a href="/avaliacoes/disponiveis"
+           class="text-xs px-3 py-1.5 rounded-full bg-red-800 hover:bg-red-900 transition">
+          Minhas Avaliações
+        </a>
+      </nav>
+      <form th:action="@{/logout}" method="post" class="inline" sec:authorize="isAuthenticated()">
+        <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+        <button
+          type="submit"
+          class="px-3 py-1.5 rounded-full bg-red-900 hover:bg-red-800 text-[11px] font-semibold shadow-sm transition">
+          Sair
+        </button>
+      </form>
+    </div>
+
+  </div>
+</header>
+
+<main class="flex-1 flex items-center justify-center px-6 py-10">
+  <div class="bg-white shadow-xl rounded-2xl p-8 md:p-10 w-full max-w-3xl border border-red-100">
+
+    <!-- Título com badge/ícone -->
+    <div class="mb-6 text-center">
+      <div class="inline-flex items-center gap-2 rounded-full bg-red-50 text-red-700 px-3 py-1 mb-3">
+        <span class="inline-block h-2 w-2 rounded-full bg-red-600"></span>
+        <span class="text-[11px] font-semibold tracking-wide uppercase">
+          <span th:text="${cadastroAluno} ? 'Cadastro de aluno' : 'Cadastro de usuário'">Cadastro</span>
+        </span>
+      </div>
+
+      <div class="flex flex-col items-center gap-2">
+        <div class="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+          <!-- Ícone usuário -->
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-5 w-5 text-red-700" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3" />
+            <path d="M6 20a6 6 0 0 1 12 0" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight"
+            th:text="${cadastroAluno} ? 'Cadastro de Aluno' : 'Cadastro de Usuário'">
+          Cadastro
+        </h1>
+        <p class="text-xs text-slate-500 max-w-xl">
+          Preencha os dados abaixo para concluir o cadastro no Sistema de Avaliação CPA.
+        </p>
+      </div>
+    </div>
 
     <!-- Mensagens flash -->
-    <div th:if="${error}" class="mb-4 text-center text-red-600 text-sm font-medium" th:text="${error}"></div>
-    <div th:if="${success}" class="mb-4 text-center text-green-600 text-sm font-medium" th:text="${success}"></div>
+    <div th:if="${error}"
+         class="mb-4 text-center text-red-700 text-sm font-medium bg-red-50 border border-red-200 rounded-lg py-2 px-3"
+         th:text="${error}">
+    </div>
+    <div th:if="${success}"
+         class="mb-4 text-center text-emerald-700 text-sm font-medium bg-emerald-50 border border-emerald-200 rounded-lg py-2 px-3"
+         th:text="${success}">
+    </div>
 
     <form th:action="${cadastroAluno} ? @{/users/aluno/registrar} : @{/users/save}"
           th:object="${user}"
           method="post"
           class="space-y-6">
+      <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
 
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
-        <input type="text" id="name" th:field="*{name}" required
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+        <input
+          type="text"
+          id="name"
+          th:field="*{name}"
+          required
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" />
       </div>
 
       <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-        <input type="email" id="email" th:field="*{email}" required
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <label for="email" class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+        <input
+          type="email"
+          id="email"
+          th:field="*{email}"
+          required
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" />
       </div>
 
       <!-- LOGIN -->
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="username" class="block text-sm font-medium text-slate-700 mb-1">
           Login de acesso
         </label>
-        <input type="text"
-               id="username"
-               th:field="*{username}"
-               required
-               placeholder="ex: joao.silva"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg
-                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-        <p class="mt-1 text-xs text-gray-500">
+        <input
+          type="text"
+          id="username"
+          th:field="*{username}"
+          required
+          placeholder="ex: joao.silva"
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" />
+        <p class="mt-1 text-[11px] text-slate-500">
           Este será o login usado para acessar o sistema.
         </p>
       </div>
 
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-        <input type="password" id="password" th:field="*{password}"
-               th:placeholder="${user.username != null and !cadastroAluno} ? 'Deixe em branco para manter' : ''"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+        <input
+          type="password"
+          id="password"
+          th:field="*{password}"
+          th:placeholder="${user.username != null && !cadastroAluno} ? 'Deixe em branco para manter' : ''"
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" />
       </div>
 
       <div>
-        <label for="ra" class="block text-sm font-medium text-gray-700 mb-1">RA / Matrícula</label>
-        <input type="text" id="ra" th:field="*{ra}"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <label for="ra" class="block text-sm font-medium text-slate-700 mb-1">RA / Matrícula</label>
+        <input
+          type="text"
+          id="ra"
+          th:field="*{ra}"
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" />
       </div>
 
       <!-- Turma -->
       <div>
-        <label for="turmaId" class="block text-sm font-medium text-gray-700 mb-1">Turma</label>
-        <select id="turmaId" name="turmaId"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <label for="turmaId" class="block text-sm font-medium text-slate-700 mb-1">Turma</label>
+        <select
+          id="turmaId"
+          name="turmaId"
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
           <option value="">(Sem turma)</option>
           <option th:each="t : ${turmas}"
                   th:value="${t.id}"
@@ -84,16 +213,20 @@
       <!-- Função – auto cadastro de aluno -->
       <div th:if="${cadastroAluno}">
         <input type="hidden" th:field="*{role}" />
-        <p class="text-sm text-gray-600 mt-1">
+        <p class="text-sm text-slate-600 mt-1">
           Sua função será: <span class="font-semibold">ALUNO</span>.
         </p>
       </div>
 
       <!-- Função – uso interno (admin) -->
       <div th:unless="${cadastroAluno}">
-        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Função</label>
-        <select id="role" th:field="*{role}" required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <label for="role" class="block text-sm font-medium text-slate-700 mb-1">Função</label>
+        <select
+          id="role"
+          th:field="*{role}"
+          required
+          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
           <option value="">Selecione...</option>
           <option value="ROLE_ALUNO">Aluno</option>
           <option value="ROLE_PROFESSOR">Professor</option>
@@ -103,15 +236,28 @@
 
       <div class="pt-4 flex justify-center gap-3">
         <a th:href="${cadastroAluno} ? @{/login} : @{/users}"
-           class="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100">
+           class="px-5 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium
+                  hover:bg-slate-100 transition">
           Cancelar
         </a>
-        <button type="submit"
-                class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-blue-700 text-sm">
+        <button
+          type="submit"
+          class="bg-red-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm hover:bg-red-800 text-sm
+                 inline-flex items-center gap-2 transition">
+          <!-- Ícone disquete / salvar -->
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h11l5 5v11H4z" />
+            <path d="M12 4v5" />
+            <rect x="9" y="13" width="6" height="5" rx="1" />
+          </svg>
           <span th:text="${cadastroAluno} ? 'Criar cadastro' : 'Salvar Usuário'">Salvar Usuário</span>
         </button>
       </div>
     </form>
   </div>
+</main>
+
 </body>
 </html>

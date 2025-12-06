@@ -28,47 +28,44 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-    // público / login / cadastro
-    .requestMatchers(
-        "/login", "/perform_login", "/error",
-        "/css/**", "/js/**", "/images/**",
-        "/users/aluno/registro", "/users/aluno/registrar"
-    ).permitAll()
+                // Rotas públicas (sem login)
+                .requestMatchers(
+                        "/login",
+                        "/perform_login",
+                        "/error",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/webjars/**",
+                        "/h2-console/**",
+                        "/users/aluno/registro",
+                        "/users/aluno/registrar"
+                ).permitAll()
 
-    // ROTAS DO ALUNO
-    .requestMatchers("/avaliacoes/disponiveis", "/avaliacoes/*/responder/**")
-        .hasAuthority("ROLE_ALUNO")
+                // Rotas específicas para ALUNO
+                // (precisam estar ANTES do "/avaliacoes/**")
+                .requestMatchers("/avaliacoes/disponiveis/**").hasAuthority("ROLE_ALUNO")
+                .requestMatchers("/avaliacoes/*/responder/**").hasAuthority("ROLE_ALUNO") // <- ADICIONADO
+                // se tiver questionário "puro" para aluno:
+                .requestMatchers("/questionnaires/available/**").hasAuthority("ROLE_ALUNO")
 
-    .requestMatchers("/questionnaires/available/**")
-        .hasAuthority("ROLE_ALUNO")
+                // Rotas de gestão (ADMIN / GESTOR)
+                .requestMatchers(
+                        "/avaliacoes/**",
+                        "/questionnaires/**",
+                        "/users/**",
+                        "/turmas/**",
+                        "/alunos/**",
+                        "/analise/**"
+                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_GESTOR")
 
-    // ANÁLISE
-    .requestMatchers("/analise/**")
-        .hasAnyAuthority("ROLE_ADMIN", "ROLE_PROFESSOR")
+                // /home pode ser visto por qualquer usuário autenticado
+                .requestMatchers("/home").authenticated()
 
-    // USUÁRIOS
-    .requestMatchers("/users/**")
-        .hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-
-    // TURMAS
-    .requestMatchers(HttpMethod.GET, "/turmas")
-        .authenticated()
-    .requestMatchers(HttpMethod.GET, "/turmas/new", "/turmas/*/edit")
-        .hasAnyAuthority("ROLE_ADMIN", "ROLE_COORDENADOR")
-    .requestMatchers(HttpMethod.POST, "/turmas/**")
-        .hasAnyAuthority("ROLE_ADMIN", "ROLE_COORDENADOR")
-
-    // QUESTIONÁRIOS & AVALIAÇÕES (GESTÃO)
-    .requestMatchers("/questionnaires/**", "/avaliacoes/**")
-        .hasAnyAuthority("ROLE_ADMIN", "ROLE_PROFESSOR")
-
-    // HOME
-    .requestMatchers("/", "/home").authenticated()
-
-    // qualquer outra rota
-    .anyRequest().authenticated()
-
+                // Qualquer outra rota autenticada (se existir algo extra)
+                .anyRequest().authenticated()
             )
             .formLogin(f -> f
                 .loginPage("/login")
@@ -82,8 +79,8 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
             )
-            .exceptionHandling(e -> e.accessDeniedPage("/error"))
-            .csrf(csrf -> csrf.disable());
+            // para conseguir abrir o H2-console em frame
+            .headers(h -> h.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }
@@ -97,11 +94,14 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("Usuário não encontrado");
             }
 
-            // valores no banco devem ser: ROLE_ADMIN, ROLE_ALUNO, ROLE_PROFESSOR, ROLE_COORDENADOR
+            String role = (u.getRole() == null || u.getRole().isBlank())
+                    ? "ROLE_USER"
+                    : u.getRole();
+
             return org.springframework.security.core.userdetails.User
                     .withUsername(u.getUsername())
                     .password(u.getPassword())
-                    .authorities(u.getRole())
+                    .authorities(role)
                     .build();
         };
     }

@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class User {
 
     @Id
-    private String username; // login
+    private String username; // login (no nosso caso, RA)
 
     private String password;
 
